@@ -10,29 +10,14 @@ from pymunk import Vec2d
 display_size = (600,600)
 ##############################################################################
 class Circle(object):
-    def __init__(self,screen, colour, origin, radius, width=0):
-        self.screen = screen
+    def __init__(self, colour, origin, radius, width=0):
         self.colour = colour
         self.origin = origin
         self.radius = radius
         self.width = width
-    def draw(self,image, colour, origin, radius, width):
-        pygame.draw.circle(self.image,self.colour,sefl.origin,int(self.radius))
-
-def drawcircle(image, colour, origin, radius, width=0):
-    if width == 0:
-        pygame.draw.circle(image,colour,origin,int(radius))
-    else:
-        if radius > 65534/5: 
-            radius = 65534/5
-        circle = pygame.Surface([radius*2+width,radius*2+width]).convert_alpha()
-        circle.fill([0,0,0,0])
-        pygame.draw.circle(circle, colour, [circle.get_width()/2, circle.get_height()/2], radius+(width/2))
-        if int(radius-(width/2)) > 0: 
-            pygame.draw.circle(circle, [0,0,0,0], [circle.get_width()/2, circle.get_height()/2], abs(int(radius-(width/2))))
-        image.blit(circle, [origin[0] - (circle.get_width()/2), origin[1] - (circle.get_height()/2)])    
-
-        print THECOLORS
+    def draw(self,image):
+        pygame.draw.circle(image,self.colour,self.origin,int(self.radius))
+#         print THECOLORS
 ##############################################################################
 def reset_bodies(space):
     for body in space.bodies:
@@ -58,7 +43,6 @@ def main():
     running = True
     font = pygame.font.Font(None, 16)
 ##############################################################################
-
     ### Physics stuff
     space = pm.Space(iterations = 1)
     space.gravity = (0.0, -1900.0)
@@ -66,7 +50,6 @@ def main():
     static_body = pm.Body()
     mouse_body = pm.Body()
 ##############################################################################
-
     bodies = []
     for x in range(-100,150,50):
         x += width / 2
@@ -88,7 +71,6 @@ def main():
     reset_bodies(space)
     selected = None
 ##############################################################################
-
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -100,7 +82,6 @@ def main():
             if event.type == pygame.USEREVENT+2:
                 reset_bodies(space)
 ##############################################################################
-
             elif event.type == KEYDOWN and event.key == K_r:
                 reset_bodies(space)
             elif event.type == KEYDOWN and event.key == K_f:
@@ -108,7 +89,6 @@ def main():
                 for body in bodies[0:r]:
                     body.apply_impulse((-6000,0))
     ##############################################################################
-
             elif event.type == MOUSEBUTTONDOWN:
                 if selected != None:
                     space.remove(selected)
@@ -120,7 +100,6 @@ def main():
                     space.add(ds)
                     selected = ds
     ##############################################################################
-
             elif event.type == MOUSEBUTTONUP:
                 if selected != None:
                     space.remove(selected)
@@ -134,7 +113,6 @@ def main():
         p = from_pygame( Vec2d(mpos) )
         mouse_body.position = p
 ##############################################################################
-
         ### Clear screen
         screen.fill(THECOLORS["black"])
         ### Draw stuff
@@ -145,20 +123,21 @@ def main():
             p2 = to_pygame(pv2)
             pygame.draw.aalines(screen, THECOLORS["yellow"], False, [p1,p2])
 ##############################################################################
-
+        circles = []
         for ball in space.shapes:
             p = to_pygame(ball.body.position)
-            drawcircle(screen, ball.color, p, int(ball.radius), 0)
+            circles.append(Circle(ball.color, p, int(ball.radius), 0))
+
+        for circle in circles:
+            circle.draw(screen)
             #pygame.draw.circle(screen, ball.color, p, int(ball.radius), 0)
 ##############################################################################
-
         fps = 50
         iterations = 25
         dt = 1.0/float(fps)/float(iterations)
         for x in range(iterations): # 10 iterations to get a more stable simulation
             space.step(dt)
 ##############################################################################
-
         screen.blit(font.render("fps: " + str(clock.get_fps()), 1, THECOLORS["white"]), (0,0))
         pygame.display.flip()
         clock.tick(fps)
