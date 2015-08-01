@@ -3,11 +3,10 @@ import os
 import pygame
 from pygame.locals import *
 from pygame.color import *
-
 import pymunk as pm
 from pymunk import Vec2d
 
-display_size = (600,600)
+display_size = (1000,700)
 ##############################################################################
 class Circle(object):
     def __init__(self, colour, origin, radius, width=0):
@@ -17,31 +16,34 @@ class Circle(object):
         self.width = width
     def draw(self,image):
         pygame.draw.circle(image,self.colour,self.origin,int(self.radius))
-#         print THECOLORS
 ##############################################################################
-def reset_bodies(space):
-    for body in space.bodies:
-        body.position = Vec2d(body.start_position)
-        body.reset_forces()
-        body.velocity = 0,0
-        body.angular_velocity = 0
-    for shape in space.shapes:
-        shape.color = THECOLORS["red"]
+
+class Main(object):
+    def reset_bodies(self,space):
+        for body in space.bodies:
+            body.position = Vec2d(body.start_position)
+            body.reset_forces()
+            body.velocity = 0,0
+            body.angular_velocity = 0
+        for shape in space.shapes:
+            shape.color = THECOLORS["red"]
+
    ############################################################################## 
 def main():
     pygame.init()
+    m = Main()
     screen = pygame.display.set_mode(display_size) 
     width, height = screen.get_size()
-    
-    def to_pygame(p):
-        """Small hack to convert pymunk to pygame coordinates"""
-        return int(p.x), int(-p.y+height)
-    def from_pygame(p): 
-        return to_pygame(p)
-        
     clock = pygame.time.Clock()
     running = True
     font = pygame.font.Font(None, 16)
+
+    def to_pygame(p):
+        """Small hack to convert pymunk to pygame coordinates"""
+        return int(p.x), int(-p.y+height)
+
+    def from_pygame(p):
+        return to_pygame(p)
 ##############################################################################
     ### Physics stuff
     space = pm.Space(iterations = 1)
@@ -68,7 +70,7 @@ def main():
         pj = pm.PinJoint(static_body, body, (x,125+offset_y), (0,0))
         space.add(pj)
         
-    reset_bodies(space)
+    m.reset_bodies(space)
     selected = None
 ##############################################################################
     while running:
@@ -80,10 +82,10 @@ def main():
                 for body in bodies[0:r]:
                     body.apply_impulse((-6000,0))
             if event.type == pygame.USEREVENT+2:
-                reset_bodies(space)
+                m.reset_bodies(space)
 ##############################################################################
             elif event.type == KEYDOWN and event.key == K_r:
-                reset_bodies(space)
+                m.reset_bodies(space)
             elif event.type == KEYDOWN and event.key == K_f:
                 r = random.randint(1,4)
                 for body in bodies[0:r]:
@@ -130,7 +132,6 @@ def main():
 
         for circle in circles:
             circle.draw(screen)
-            #pygame.draw.circle(screen, ball.color, p, int(ball.radius), 0)
 ##############################################################################
         fps = 50
         iterations = 25
@@ -141,7 +142,7 @@ def main():
         screen.blit(font.render("fps: " + str(clock.get_fps()), 1, THECOLORS["white"]), (0,0))
         pygame.display.flip()
         clock.tick(fps)
-        
+
 if __name__ == '__main__':
     sys.exit(main())
 
